@@ -1,27 +1,51 @@
+local addonName, addon = ...
+local utils = addon.Utils
 local soundPath = "Interface\\AddOns\\RoosterLoop\\WhistleStop.mp3"
 local channel = "Master"
 local soundLengthSeconds = 89
-local enabled = false
 local ticker
-local soundHandle
+local evalTicker
+local isPlaying = false
+local enabled = false
+local soundHandle = nil
+local M = {}
+addon.Rooster = M
 
 local function Notify(msg)
 	print(string.format("RoosterLoop - %s", msg))
 end
 
+local function StopEvaluator()
+	if evalTicker then
+		evalTicker:Cancel()
+		evalTicker = nil
+	end
+end
+
+local function StartEvaluator()
+	if evalTicker then
+		return
+	end
+
+	evalTicker = C_Timer.NewTicker(0.5, function()
+		M:PlayOrStop()
+	end)
+end
+
 local function StopLoop()
 	enabled = false
+	isPlaying = false
 
 	if ticker then
 		ticker:Cancel()
 		ticker = nil
 	end
 
-	if not soundHandle then
-		return
+	if type(soundHandle) == "number" then
+		pcall(StopSound, soundHandle)
 	end
 
-	StopSound(soundHandle)
+	soundHandle = nil
 end
 
 local function StartLoop()
@@ -36,9 +60,11 @@ local function StartLoop()
 
 	if ok then
 		soundHandle = handle
+		isPlaying = true
 	else
 		Notify("Failed to play song.")
 		soundHandle = nil
+		isPlaying = false
 	end
 
 	ticker = C_Timer.NewTicker(soundLengthSeconds, function()
@@ -50,46 +76,128 @@ local function StartLoop()
 
 		if ok then
 			soundHandle = handle
+			isPlaying = true
 		else
 			Notify("Failed to play song.")
 			soundHandle = nil
+			isPlaying = false
 		end
 	end)
 end
 
-SLASH_ROOSTER1 = "/rooster"
+function M:Stop()
+	StopLoop()
+end
 
-SlashCmdList.ROOSTER = function()
-	if enabled then
-		StopLoop()
-		Notify("Rooster loop stopping.")
-	else
-		StartLoop()
-		Notify("Rooster loop starting.")
+function M:Play()
+	if isPlaying then
+		return
 	end
+
+	StartLoop()
+end
+
+function M:PlayOrStop()
+	local db = RoosterLoopDB
+
+	if not db or not db.PlayWhen then
+		return
+	end
+
+	local inInstance = IsInInstance()
+
+	if db.PlayWhen.Always then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Resting and IsResting() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.InInstance and inInstance then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.NotInInstance and not inInstance then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Walking and utils:IsWalking() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.StandingStill and utils:IsStandingStill() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Flying and IsFlying() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Mounted and IsMounted() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Swimming and IsSwimming() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Afk and UnitIsAFK("player") then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Ghost and UnitIsGhost("player") then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Dead and UnitIsDead("player") then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.Fishing and utils:IsFishing() then
+		M:Play()
+		return
+	end
+
+	if db.PlayWhen.AuctionHouse and utils:IsAuctionHouseShown() then
+		M:Play()
+		return
+	end
+
+	M:Stop()
+end
+
+function M:Init()
+	-- play sound in the background
+	SetCVar("Sound_EnableSoundWhenGameIsInBG", 1)
+
+	addon.Config:Init()
+
+	StartEvaluator()
+	M:PlayOrStop()
 end
 
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
+frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGOUT")
 
-frame:SetScript("OnEvent", function(_, event)
-	if event == "PLAYER_LOGIN" then
-		-- keep playing in the background
-		SetCVar("Sound_EnableSoundWhenGameIsInBG", 1)
-		StartLoop()
-		Notify("/rooster to toggle the music, but honestly why would you want to stop it?")
+frame:SetScript("OnEvent", function(_, event, arg1)
+	if event == "ADDON_LOADED" and arg1 == addonName then
+		M:Init()
 	elseif event == "PLAYER_LOGOUT" then
-		StopLoop()
+		StopEvaluator()
+		M:Stop()
 	end
 end)
-
-SlashCmdList.WHISTLE = function()
-	if enabled then
-		StopLoop()
-		Notify("Whistle loop stopping.")
-	else
-		StartLoop()
-		Notify("Whistle loop starting.")
-	end
-end
