@@ -1,8 +1,11 @@
 ## Interface: 120001, 120000, 110207, 50503, 40402, 38000, 30405, 30300, 20505, 11508
 ## Title: RoosterLoop
-## Notes: Plays the Robin Hood rooster whistle song on repeat.
+## Notes: Plays the Robin Hood rooster whistle song on certain conditions.
 ## Author: Verz
 ## Version: 1.0.0
+## SavedVariables: RoosterLoopDB
 ## IconTexture: Interface\AddOns\RoosterLoop\icon.blp
 
+Utils.lua
+Config.lua
 RoosterLoop.lua
