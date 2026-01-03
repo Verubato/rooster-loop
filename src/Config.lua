@@ -1,27 +1,64 @@
 local addonName, addon = ...
 local utils = addon.Utils
-local verticalSpacing = 10
+local verticalSpacing = 20
+local checkboxesPerLine = 4
+local checkboxWidth = 150
 local M = {}
 addon.Config = M
 
 local dbDefaults = {
+	Version = 2,
 	PlayWhen = {
 		Always = false,
-		Walking = true,
+		Random = true,
+		Walking = false,
 		Resting = false,
-		InInstance = false,
-		NotInInstance = false,
 		StandingStill = false,
-		Swimming = true,
-		Mounted = true,
-		Flying = true,
-		Afk = true,
-		Ghost = true,
-		Dead = true,
-		Fishing = true,
-		AuctionHouse = true,
+		Swimming = false,
+		Mounted = false,
+		Flying = false,
+		Afk = false,
+		Ghost = false,
+		Dead = false,
+		Fishing = false,
+		AuctionHouse = false,
+	},
+	DontPlayWhen = {
+		InInstance = false,
+		InCombat = true,
 	},
 }
+
+local function GetAndUpgradeDb()
+	RoosterLoopDB = RoosterLoopDB or {}
+	local db = RoosterLoopDB
+
+	if not db.Version or db.Version == 1 then
+		-- reset back to defaults
+		RoosterLoopDB = {}
+		db = utils:CopyTable(dbDefaults, RoosterLoopDB)
+
+		db.Version = 2
+	else
+		db = utils:CopyTable(dbDefaults, RoosterLoopDB)
+	end
+
+	return db
+end
+
+local function SettingsSize()
+	local settingsContainer = SettingsPanel and SettingsPanel.Container
+
+	if settingsContainer then
+		return settingsContainer:GetWidth(), settingsContainer:GetHeight()
+	end
+
+	if InterfaceOptionsFramePanelContainer then
+		return InterfaceOptionsFramePanelContainer:GetWidth(), InterfaceOptionsFramePanelContainer:GetHeight()
+	end
+
+	return 600, 600
+end
 
 local function CreateSettingCheckbox(panel, setting)
 	local checkbox = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
@@ -46,18 +83,26 @@ local function CreateSettingCheckbox(panel, setting)
 	return checkbox
 end
 
-local function SettingsSize()
-	local settingsContainer = SettingsPanel and SettingsPanel.Container
+local function LayoutSettings(settings, panel, relativeTo, xOffset, yOffset)
+	local x = xOffset
+	local y = yOffset
+	local lastCheckbox = nil
 
-	if settingsContainer then
-		return settingsContainer:GetWidth(), settingsContainer:GetHeight()
+	for i, setting in ipairs(settings) do
+		local checkbox = CreateSettingCheckbox(panel, setting)
+		checkbox:SetPoint("TOPLEFT", relativeTo, "TOPLEFT", x, y)
+
+		lastCheckbox = checkbox
+
+		if i % checkboxesPerLine == 0 then
+			y = y - (verticalSpacing * 2)
+			x = xOffset
+		else
+			x = x + checkboxWidth
+		end
 	end
 
-	if InterfaceOptionsFramePanelContainer then
-		return InterfaceOptionsFramePanelContainer:GetWidth(), InterfaceOptionsFramePanelContainer:GetHeight()
-	end
-
-	return 600, 600
+	return lastCheckbox
 end
 
 function CanOpenOptionsDuringCombat()
@@ -84,8 +129,7 @@ local function AddCategory(panel)
 end
 
 function M:Init()
-	RoosterLoopDB = RoosterLoopDB or {}
-	local db = utils:CopyTable(dbDefaults, RoosterLoopDB)
+	local db = GetAndUpgradeDb()
 
 	local panel = CreateFrame("Frame")
 	panel.name = addonName
@@ -96,13 +140,18 @@ function M:Init()
 		return
 	end
 
+	-- since we have 4 checkboxes per line
+	-- divide into 6 blocks, so we have 1 block of space on either side
+	local settingsWidth, _ = SettingsSize()
+	local start = (settingsWidth / (checkboxesPerLine + 2)) - checkboxWidth / 2
+
 	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
 	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-	title:SetPoint("TOP", 0, -verticalSpacing)
+	title:SetPoint("TOPLEFT", start, -verticalSpacing)
 	title:SetText(string.format("%s - %s", addonName, version))
 
 	local description = panel:CreateFontString(nil, "ARTWORK", "GameFontWhite")
-	description:SetPoint("TOP", title, 0, -20)
+	description:SetPoint("TOPLEFT", title, 0, -verticalSpacing)
 	description:SetText("Dee de de da dee da do do")
 
 	local settings = {
@@ -117,6 +166,16 @@ function M:Init()
 			end,
 		},
 		{
+			Name = "Random",
+			Tooltip = "Play randomly.",
+			Enabled = function()
+				return db.PlayWhen.Random
+			end,
+			OnChanged = function(enabled)
+				db.PlayWhen.Random = enabled
+			end,
+		},
+		{
 			Name = "Resting",
 			Tooltip = "Play when resting.",
 			Enabled = function()
@@ -124,26 +183,6 @@ function M:Init()
 			end,
 			OnChanged = function(enabled)
 				db.PlayWhen.Resting = enabled
-			end,
-		},
-		{
-			Name = "In Instance",
-			Tooltip = "Play when inside an instance.",
-			Enabled = function()
-				return db.PlayWhen.InInstance
-			end,
-			OnChanged = function(enabled)
-				db.PlayWhen.InInstance = enabled
-			end,
-		},
-		{
-			Name = "Not in instance",
-			Tooltip = "Play when not inside an instance.",
-			Enabled = function()
-				return db.PlayWhen.NotInInstance
-			end,
-			OnChanged = function(enabled)
-				db.PlayWhen.NotInInstance = enabled
 			end,
 		},
 		{
@@ -248,26 +287,40 @@ function M:Init()
 		},
 	}
 
-	local checkboxesPerLine = 4
-	local settingsWidth, _ = SettingsSize()
-	local checkboxWidth = 150
-	-- since we have 4 checkboxes per line
-	-- divide into 6 blocks, so we have 1 block of space on either side
-	local start = (settingsWidth / (checkboxesPerLine + 2)) - checkboxWidth / 2
-	local yOffset = verticalSpacing * 7
-	local xOffset = start
+	local filters = {
+		{
+			Name = "In Instance",
+			Tooltip = "Allow playing when inside an instance.",
+			Enabled = function()
+				return db.DontPlayWhen.InInstance
+			end,
+			OnChanged = function(enabled)
+				db.DontPlayWhen.InInstance = enabled
+			end,
+		},
+		{
+			Name = "In Combat",
+			Tooltip = "Allow playing when in combat.",
+			Enabled = function()
+				return db.DontPlayWhen.InCombat
+			end,
+			OnChanged = function(enabled)
+				db.DontPlayWhen.InCombat = enabled
+			end,
+		},
+	}
 
-	for i, setting in ipairs(settings) do
-		local checkbox = CreateSettingCheckbox(panel, setting)
-		checkbox:SetPoint("TOPLEFT", panel, "TOPLEFT", xOffset, -yOffset)
+	local playWhenHeading = panel:CreateFontString(nil, "ARTWORK", "GameFontWhite")
+	playWhenHeading:SetPoint("TOPLEFT", description, 0, -verticalSpacing * 2)
+	playWhenHeading:SetText("Play when:")
 
-		if i % checkboxesPerLine == 0 then
-			yOffset = yOffset + (verticalSpacing * 3)
-			xOffset = start
-		else
-			xOffset = xOffset + checkboxWidth
-		end
-	end
+	local anchor = LayoutSettings(settings, panel, playWhenHeading, 0, -verticalSpacing)
+
+	local dontPlayWhenHeading = panel:CreateFontString(nil, "ARTWORK", "GameFontWhite")
+	dontPlayWhenHeading:SetPoint("TOPLEFT", anchor, 0, -verticalSpacing * 3)
+	dontPlayWhenHeading:SetText("Don't play when:")
+
+	LayoutSettings(filters, panel, dontPlayWhenHeading, 0, -verticalSpacing)
 
 	SLASH_ROOSTER1 = "/rooster"
 	SLASH_ROOSTER2 = "/roosterloop"
