@@ -2,7 +2,7 @@
 ## Title: RoosterLoop
 ## Notes: Plays the Robin Hood rooster whistle song on certain conditions.
 ## Author: Verz
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: RoosterLoopDB
 ## IconTexture: Interface\AddOns\RoosterLoop\icon.blp
 
