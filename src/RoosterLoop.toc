@@ -5,6 +5,7 @@
 ## Version: 1.1.0
 ## SavedVariables: RoosterLoopDB
 ## IconTexture: Interface\AddOns\RoosterLoop\icon.blp
+## X-Curse-Project-ID: 1418786
 
 Utils.lua
 Config.lua
