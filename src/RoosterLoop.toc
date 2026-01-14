@@ -4,7 +4,7 @@
 ## Author: Verz
 ## Version: 1.1.0
 ## SavedVariables: RoosterLoopDB
-## IconTexture: Interface\AddOns\RoosterLoop\icon.blp
+## IconTexture: Interface\AddOns\RoosterLoop\Icon.blp
 ## X-Curse-Project-ID: 1418786
 
 Utils.lua
