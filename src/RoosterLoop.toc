@@ -1,4 +1,4 @@
-## Interface: 120100, 120001, 120000, 110207, 50504, 40402, 38000, 30405, 30300, 20506, 11509
+## Interface: 120100, 120007, 120001, 120000, 110207, 50504, 40402, 38002, 38000, 30405, 30300, 20506, 11509
 ## Title: RoosterLoop
 ## Notes: Plays the Robin Hood rooster whistle song on certain conditions.
 ## Author: Verz
