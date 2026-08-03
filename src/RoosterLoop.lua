@@ -13,6 +13,7 @@ local randomState = {}
 local randomActiveKey = nil
 local randomInitialised = false
 local randomPickChance = 0.10
+---@class Rooster
 local M = {}
 addon.Rooster = M
 
@@ -328,7 +329,7 @@ function M:Init()
 	M:PlayOrStop()
 end
 
-local frame = CreateFrame("Frame")
+local frame = CreateFrame("Frame") -- luaconv: its handler is a function defined above
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGOUT")
 

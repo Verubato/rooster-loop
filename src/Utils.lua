@@ -1,4 +1,5 @@
 local _, addon = ...
+---@class Utils
 local M = {}
 addon.Utils = M
 

@@ -3,6 +3,7 @@ local utils = addon.Utils
 local verticalSpacing = 20
 local checkboxesPerLine = 4
 local checkboxWidth = 150
+---@class Config
 local M = {}
 addon.Config = M
 
