@@ -19,13 +19,25 @@ function M:CopyTable(src, dst)
 	return dst
 end
 
+-- 12.0 hands tainted code a secret number for the player's speed, and comparing one throws.
+-- Older clients have no secrets, so the predicate is only called when the client defines it.
+local function ReadSpeed()
+	local speed = GetUnitSpeed("player")
+
+	if issecretvalue and issecretvalue(speed) then
+		return nil
+	end
+
+	return speed
+end
+
 function M:IsWalking()
 	if UnitAffectingCombat("player") then
 		-- they might be affected by a movement impairment debuff
 		return false
 	end
 
-	local speed = GetUnitSpeed("player")
+	local speed = ReadSpeed()
 
 	-- 0 = not moving at all
 	if not speed or speed <= 0 then
@@ -38,13 +50,18 @@ function M:IsWalking()
 end
 
 function M:IsStandingStill()
-	local currentSpeed = GetUnitSpeed("player")
+	local currentSpeed = ReadSpeed()
+
+	-- an unreadable speed isn't proof of standing still
+	if not currentSpeed then
+		return false
+	end
 
 	if IsFlying() then
 		return false
 	end
 
-	return not currentSpeed or currentSpeed <= 0
+	return currentSpeed <= 0
 end
 
 function M:IsFishing()
