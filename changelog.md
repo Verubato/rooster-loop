@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+Fixed a combat error caused by the 12.0 secret player speed.
+
 ## 1.2.2
 
 Updated interface versions for the latest client builds.
