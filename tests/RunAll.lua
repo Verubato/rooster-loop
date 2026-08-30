@@ -1,0 +1,54 @@
+-- Entry point for the RoosterLoop test suite. Run from the repository root:
+--
+--   lua tests/RunAll.lua
+--
+-- Requirements: Lua 5.1. The shared harness lives in the build submodule, so a fresh clone
+-- needs `git submodule update --init` first.
+
+package.path = "build/Lua/?.lua;tests/Helpers/?.lua;tests/?.lua;" .. package.path
+
+-- Before anything pulls in WowMock, so the client APIs it lacks land in its baseline.
+require("Client")
+
+io.write("RoosterLoop - unit tests\n")
+io.write("======================================\n")
+
+local testFiles = {
+	"tests/TestConfig.lua",
+	"tests/TestSmoke.lua",
+}
+
+local loadErrors = {}
+
+for _, path in ipairs(testFiles) do
+	io.write("\n[" .. path .. "]\n")
+
+	local chunk, err = loadfile(path)
+
+	if chunk then
+		local ok, runError = pcall(chunk)
+
+		if not ok then
+			io.write("  ERROR while running " .. path .. ":\n  " .. tostring(runError) .. "\n")
+			loadErrors[#loadErrors + 1] = path .. ": " .. tostring(runError)
+		end
+	else
+		io.write("  ERROR loading " .. path .. ":\n  " .. tostring(err) .. "\n")
+		loadErrors[#loadErrors + 1] = path .. ": " .. tostring(err)
+	end
+end
+
+local fw = require("TestFramework")
+local passed = fw.summary()
+
+if #loadErrors > 0 then
+	io.write("\nFile-load errors:\n")
+
+	for _, message in ipairs(loadErrors) do
+		io.write("  " .. message .. "\n")
+	end
+
+	passed = false
+end
+
+os.exit(passed and 0 or 1)

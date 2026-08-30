@@ -16,6 +16,7 @@ RoosterLoop plays the Robin Hood rooster whistle song ("Whistle Stop") on a loop
 | Options location | Game Menu -> Options -> AddOns -> RoosterLoop |
 | Sound file | WhistleStop.mp3, 89 seconds, played on the Master sound channel |
 | CurseForge project | roosterloop (ID 1418786) |
+| Bundled libraries | MiniFramework only, vendored at src/Libs/MiniFramework. This repo sits outside SyncFramework.ps1's normal scan root, so a snapshot refresh needs `pwsh -NoProfile -File scripts/SyncFramework.ps1 -Include RoosterLoop -ReposRoot 'D:\repos\wow'` run from the MiniFramework repo. |
 
 ## How it works
 
@@ -40,7 +41,7 @@ Random watches this set of conditions: Walking, Standing still, Flying, Mounted,
 
 ## Settings
 
-All settings are checkboxes on one panel. Changes take effect within half a second (the next evaluation tick). There is no volume or sound setting; volume follows your Master channel.
+All settings are checkboxes on one panel, alongside a Reset to Defaults button. Changes take effect within half a second (the next evaluation tick). There is no volume or sound setting; volume follows your Master channel.
 
 ### Play when:
 
@@ -73,7 +74,7 @@ Note: the in-game tooltips for these two say "Allow playing when...", which is b
 
 - Supports Retail and Classic clients (see interface list above). The AH detection checks both the retail AuctionHouseFrame and the classic AuctionFrame.
 - The secret-speed guard only matters on 12.0+ retail; older clients always read speed normally.
-- If the settings UI cannot be opened during combat (Midnight-era clients), the slash command does nothing until combat ends.
+- If the settings UI cannot be opened during combat (Midnight-era clients), the slash command prints "Can't do that during combat." to chat instead of opening the panel.
 
 ## Troubleshooting
 
