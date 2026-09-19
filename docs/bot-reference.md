@@ -10,7 +10,7 @@ RoosterLoop plays the Robin Hood rooster whistle song ("Whistle Stop") on a loop
 |---|---|
 | Addon version | 1.2.3 |
 | Author | Verz |
-| Interface versions (TOC) | 120100, 120007, 120001, 120000, 110207, 50504, 40402, 38002, 38000, 30405, 30300, 20506, 11509 (Retail and Classic clients) |
+| Interface versions (TOC) | 120100, 16001, 120007, 120001, 120000, 110207, 50504, 40402, 38002, 38000, 30405, 30300, 20506, 11509 (Retail and Classic clients) |
 | Saved variables | RoosterLoopDB (account-wide) |
 | Slash commands | /rooster, /roosterloop (both open the options panel) |
 | Options location | Game Menu -> Options -> AddOns -> RoosterLoop |
