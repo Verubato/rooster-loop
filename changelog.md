@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.4
+
+Added WoW Forever support.
+
 ## 1.2.3
 
 Fixed a combat error caused by the 12.0 secret player speed.
